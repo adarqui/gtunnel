@@ -18,7 +18,7 @@ const (
 
 func parseArgs() (ls EndpointPairList, cert, key string, verifyOpt VerifyOpt) {
 	flag.CommandLine.Var(&ls, "pair", "Endpoint pair")
-	flag.StringVar(&cert,"cert", "", "certificate file")
+	flag.StringVar(&cert, "cert", "", "certificate file")
 	flag.StringVar(&key, "key", "", "private key file")
 	flag.CommandLine.Var(&verifyOpt, "verify", "ca=file:servername=hello.com")
 	flag.Parse()
@@ -36,7 +36,7 @@ func main() {
 
 	time.Sleep(MeterPeriod)
 	prevMetrics := Measure{0, 0, 0}
-	for ticker := time.NewTicker(MeterPeriod); ; <-ticker.C  {
+	for ticker := time.NewTicker(MeterPeriod); ; <-ticker.C {
 		measure := meter.GetAndReset()
 
 		if !measure.Equals(&prevMetrics) {
@@ -47,11 +47,21 @@ func main() {
 }
 
 func redirectLoop(wire *Wire, from net.Conn, to net.Conn, master bool) {
+
 	buf := make([]byte, BufSize)
+
+	defer func() {
+		if !master {
+			wire.Close()
+		}
+	}()
 
 	for !wire.closed {
 		sz, err := from.Read(buf)
 		if err != nil {
+			break
+		}
+		if sz == 0 {
 			break
 		}
 
@@ -99,7 +109,7 @@ func listenLoop(pair EndpointPair, cert, key string, verifyOpt VerifyOpt, m *Met
 			go redirectLoop(wire, wire.src, wire.dst, true)
 			go redirectLoop(wire, wire.dst, wire.src, false)
 			m.Append(wire)
-		} ()
+		}()
 	}
 }
 
@@ -120,8 +130,8 @@ func dialTo(ep Endpoint, verifyOpt VerifyOpt) (net.Conn, error) {
 	if ep.IsSecure() {
 		cfg := tls.Config{
 			InsecureSkipVerify: !verifyOpt.DoVerify,
-			RootCAs: verifyOpt.RootCA,
-			ServerName: verifyOpt.ServerName,
+			RootCAs:            verifyOpt.RootCA,
+			ServerName:         verifyOpt.ServerName,
 		}
 		dialer := net.Dialer{Timeout: DialAllowance}
 

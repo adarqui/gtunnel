@@ -73,18 +73,18 @@ func (m *Measure) String(d time.Duration) string {
 }
 
 func normalize(b uint64, d time.Duration) string {
-	if b >= 1024 * 1024 {
+	if b >= 1024*1024 {
 		f := float64(b) / 1024 / 1024
 		return fmt.Sprintf("%.2f MB %.2f MB/s", f, f/d.Seconds())
 	}
 
 	f := float64(b) / 1024
-	return fmt.Sprintf("%.2f KB %.2f KB/s", f, f/d.Seconds());
+	return fmt.Sprintf("%.2f KB %.2f KB/s", f, f/d.Seconds())
 }
 
 type Meter struct {
-	ls   []*Wire
-	mtx  sync.Mutex
+	ls  []*Wire
+	mtx sync.Mutex
 }
 
 func (m *Meter) Append(wire *Wire) {
